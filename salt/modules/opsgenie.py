@@ -29,7 +29,7 @@ import requests
 import salt.exceptions
 import salt.utils.json
 
-API_ENDPOINT = "https://api.opsgenie.com/v1/json/saltstack?apiKey="
+API_ENDPOINT = "https://api.opsgenie.com/v2/alerts"
 
 log = logging.getLogger(__name__)
 
@@ -73,8 +73,8 @@ def post_data(api_key=None, name='OpsGenie Execution Module', reason=None,
             'API Key or Reason or Action Type cannot be None.')
 
     data = dict()
-    data['name'] = name
-    data['reason'] = reason
+    data['alias'] = name
+    data['message'] = reason
     data['actionType'] = action_type
     data['cpuModel'] = __grains__['cpu_model']
     data['cpuArch'] = __grains__['cpuarch']
@@ -96,5 +96,6 @@ def post_data(api_key=None, name='OpsGenie Execution Module', reason=None,
     response = requests.post(
         url=API_ENDPOINT + api_key,
         data=salt.utils.json.dumps(data),
-        headers={'Content-Type': 'application/json'})
+        headers={'Content-Type': 'application/json',
+		         'Authorization': 'GenieKey ' + api_key})
     return response.status_code, response.text
