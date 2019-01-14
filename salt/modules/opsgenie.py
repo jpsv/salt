@@ -68,14 +68,14 @@ def post_data(api_key=None, name='OpsGenie Execution Module', reason=None,
         functionality you must provide name field for both states like in
         this case.
     '''
-    if api_key is None or reason is None or action_type is None:
+    if api_key is None or reason is None:
         raise salt.exceptions.SaltInvocationError(
-            'API Key or Reason or Action Type cannot be None.')
+            'API Key or Reason cannot be None.')
 
     data = dict()
     data['alias'] = name
     data['message'] = reason
-    data['actionType'] = action_type
+    # data['actions'] = action_type
     data['cpuModel'] = __grains__['cpu_model']
     data['cpuArch'] = __grains__['cpuarch']
     data['fqdn'] = __grains__['fqdn']
@@ -93,9 +93,17 @@ def post_data(api_key=None, name='OpsGenie Execution Module', reason=None,
     log.debug('Below data will be posted:\n%s', data)
     log.debug('API Key: %s \t API Endpoint: %s', api_key, API_ENDPOINT)
 
-    response = requests.post(
-        url=API_ENDPOINT + api_key,
-        data=salt.utils.json.dumps(data),
-        headers={'Content-Type': 'application/json',
-		         'Authorization': 'GenieKey ' + api_key})
+    if action_type == "Create":
+        response = requests.post(
+            url=API_ENDPOINT,
+            data=salt.utils.json.dumps(data),
+            headers={'Content-Type': 'application/json',
+                 'Authorization': 'GenieKey ' + api_key})
+    else:
+        response = requests.post(
+            url=API_ENDPOINT + "/" + name + "/close?identifierType=alias",
+            data=salt.utils.json.dumps(data),
+            headers={'Content-Type': 'application/json',
+                     'Authorization': 'GenieKey ' + api_key})
+
     return response.status_code, response.text
